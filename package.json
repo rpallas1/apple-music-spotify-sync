@@ -1,0 +1,30 @@
+{
+  "name": "apple-music-spotify-sync",
+  "version": "1.0.0",
+  "description": "CLI tool to sync Apple Music playlists to Spotify with interactive song matching",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rpallas1/apple-music-spotify-sync.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rpallas1/apple-music-spotify-sync/issues"
+  },
+  "homepage": "https://github.com/rpallas1/apple-music-spotify-sync#readme",
+  "dependencies": {
+    "chalk": "^5.6.0",
+    "cli-progress": "^3.12.0",
+    "dotenv": "^17.2.1",
+    "inquirer": "^12.9.3",
+    "spotify-web-api-node": "^5.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

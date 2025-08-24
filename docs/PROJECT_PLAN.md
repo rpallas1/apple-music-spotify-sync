@@ -43,15 +43,15 @@ Build a local Node.js CLI tool that syncs Apple Music playlists to Spotify with 
 
 ### 1.2 Spotify OAuth Implementation
 
-- [ ] **Task 1.2.1**: Create OAuth server for authorization code flow
+- [x] **Task 1.2.1**: Create OAuth server for authorization code flow
   - Set up Express server on port 8888
   - Handle `/callback` route
   - Implement PKCE for security
-- [ ] **Task 1.2.2**: Token management system
+- [x] **Task 1.2.2**: Token management system
   - Save/load refresh tokens securely
   - Automatic token refresh logic
   - Token validation
-- [ ] **Task 1.2.3**: First-time authentication flow
+- [x] **Task 1.2.3**: First-time authentication flow
   - Browser opening automation
   - User consent handling
   - Token storage

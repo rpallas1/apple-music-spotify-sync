@@ -2,11 +2,11 @@ const express = require("express");
 const SpotifyWebApi = require("spotify-web-api-node");
 const crypto = require("crypto");
 const Logger = require("../utils/logger");
+const TokenManager = require("./token-manager");
 const { SpotifyAuthError } = require("../utils/errors");
 
 /**
- * Spotify OAuth authentication handler
- * Implements OAuth 2.0 authorization code flow with PKCE
+ * Spotify OAuth authentication handler with persistent token management
  */
 class SpotifyAuth {
   constructor() {
@@ -27,6 +27,7 @@ class SpotifyAuth {
       redirectUri: this.redirectUri,
     });
 
+    this.tokenManager = new TokenManager();
     this.server = null;
     this.authPromise = null;
   }
@@ -143,59 +144,81 @@ class SpotifyAuth {
   }
 
   /**
-   * Open the Spotify authorization URL in the default browser
+   * Open the Spotify authorization URL in preferred browser
    * @param {string} authUrl - The authorization URL
    */
   async openBrowser(authUrl) {
     const { default: open } = await import("open");
+    const preferredBrowser = process.env.PREFERRED_BROWSER;
+
     try {
-      await open(authUrl);
-      Logger.success("Opened browser for Spotify authorization");
-    } catch (err) {
-      Logger.warning("Could not open browser automatically");
+      if (preferredBrowser) {
+        await open(authUrl, { app: { name: preferredBrowser } });
+        Logger.success(`Opened ${preferredBrowser} for Spotify authorization`);
+      } else {
+        await open(authUrl);
+        Logger.success("Opened default browser for Spotify authorization");
+      }
+    } catch (error) {
+      Logger.warning(
+        `Could not open ${preferredBrowser || "browser"} automatically`,
+      );
       Logger.info(`Please open this URL manually: ${authUrl}`);
     }
   }
 
   /**
-   * Start the OAuth flow
+   * Main authentication method - handles both new auth and token refresh
+   * @param {boolean} forceReauth - Force new authentication even if valid tokens exist
    * @returns {Promise<Object>} Access token and refresh token
    */
-  async authenticate() {
+  async authenticate(forceReauth = false) {
     try {
-      Logger.info("Starting Spotify OAuth flow...");
+      // Check for existing valid tokens first
+      if (!forceReauth && (await this.tokenManager.hasValidTokens())) {
+        Logger.info("Using existing valid tokens");
+        const tokens = await this.tokenManager.loadTokens();
 
-      // Generate PKCE parameters (for enhanced security)
-      const { codeVerifier, codeChallenge } = this.generatePKCE();
+        this.spotifyApi.setAccessToken(tokens.accessToken);
+        this.spotifyApi.setRefreshToken(tokens.refreshToken);
 
-      // Define the scopes we need
-      const scopes = [
-        "playlist-read-private",
-        "playlist-read-collaborative",
-        "playlist-modify-private",
-        "playlist-modify-public",
-        "user-library-read",
-      ];
+        return {
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          expiresIn: Math.floor((tokens.expiresAt - Date.now()) / 1000),
+        };
+      }
 
-      // Create authorization URL
-      const state = crypto.randomBytes(16).toString("hex");
-      const authUrl = this.spotifyApi.createAuthorizeURL(scopes, state);
+      // Try to refresh tokens if we have a refresh token
+      const existingTokens = await this.tokenManager.loadTokens();
+      if (!forceReauth && existingTokens && existingTokens.refreshToken) {
+        try {
+          Logger.info("Attempting to refresh expired tokens...");
+          const refreshedTokens = await this.tokenManager.refreshTokens(
+            this.spotifyApi,
+          );
 
-      Logger.info("Opening Spotify authorization page...");
+          this.spotifyApi.setAccessToken(refreshedTokens.accessToken);
+          this.spotifyApi.setRefreshToken(refreshedTokens.refreshToken);
 
-      // Start the OAuth server
-      const serverPromise = this.startOAuthServer();
+          return refreshedTokens;
+        } catch (refreshError) {
+          Logger.warning(
+            "Token refresh failed, starting new authentication flow",
+          );
+        }
+      }
 
-      // Open the browser
-      await this.openBrowser(authUrl);
+      // Start new OAuth flow
+      Logger.info("Starting new Spotify OAuth flow...");
+      const tokens = await this.performOAuthFlow();
 
-      Logger.info("Waiting for authorization...");
-      Logger.info("Please authorize the application in your browser");
+      // Save the new tokens
+      await this.tokenManager.saveTokens(tokens);
 
-      // Wait for the OAuth callback
-      const tokens = await serverPromise;
+      this.spotifyApi.setAccessToken(tokens.accessToken);
+      this.spotifyApi.setRefreshToken(tokens.refreshToken);
 
-      Logger.success("Successfully authenticated with Spotify!");
       return tokens;
     } catch (error) {
       if (this.server) {
@@ -203,6 +226,58 @@ class SpotifyAuth {
       }
       throw new SpotifyAuthError(`Authentication failed: ${error.message}`);
     }
+  }
+
+  /**
+   * Perform the OAuth flow (extracted from original authenticate method)
+   * @returns {Promise<Object>} Tokens from OAuth flow
+   */
+  async performOAuthFlow() {
+    // Generate PKCE parameters
+    const { codeVerifier, codeChallenge } = this.generatePKCE();
+
+    // Define the scopes we need
+    const scopes = [
+      "playlist-read-private",
+      "playlist-read-collaborative",
+      "playlist-modify-private",
+      "playlist-modify-public",
+      "user-library-read",
+    ];
+
+    // Create authorization URL
+    const state = crypto.randomBytes(16).toString("hex");
+    const authUrl = this.spotifyApi.createAuthorizeURL(scopes, state);
+
+    Logger.info("Opening Spotify authorization page...");
+
+    // Start the OAuth server
+    const serverPromise = this.startOAuthServer();
+
+    // Open the browser
+    await this.openBrowser(authUrl);
+
+    Logger.info("Waiting for authorization...");
+    Logger.info("Please authorize the application in your browser");
+
+    // Wait for the OAuth callback
+    return await serverPromise;
+  }
+
+  /**
+   * Logout - clear saved tokens
+   */
+  async logout() {
+    await this.tokenManager.clearTokens();
+    Logger.success("Logged out successfully");
+  }
+
+  /**
+   * Check if user is authenticated
+   * @returns {boolean} True if authenticated
+   */
+  async isAuthenticated() {
+    return await this.tokenManager.hasValidTokens();
   }
 
   /**

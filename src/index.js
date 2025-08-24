@@ -17,7 +17,7 @@ async function main() {
 
     Logger.warning("Application structure ready - implementation pending.");
   } catch (error) {
-    Logger.error("Application failed: ${error.message}");
+    Logger.error(`Application failed: ${error.message}`);
     process.exit(1);
   }
 }

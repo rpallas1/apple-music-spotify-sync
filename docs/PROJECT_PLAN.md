@@ -75,11 +75,11 @@ Build a local Node.js CLI tool that syncs Apple Music playlists to Spotify with 
 
 ### 2.2 Spotify Search Implementation
 
-- [ ] **Task 2.2.1**: Basic search functionality
+- [x] **Task 2.2.1**: Basic search functionality
   - Simple track + artist search
   - Handle API rate limiting
   - Error handling for failed searches
-- [ ] **Task 2.2.2**: Smart matching algorithm
+- [x] **Task 2.2.2**: Smart matching algorithm
   - Fuzzy string matching for titles
   - Multiple search strategies (exact, loose, artist-only)
   - Confidence scoring system

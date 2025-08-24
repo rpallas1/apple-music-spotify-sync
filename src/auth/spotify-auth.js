@@ -1,9 +1,12 @@
+const dotenv = require("dotenv");
 const express = require("express");
 const SpotifyWebApi = require("spotify-web-api-node");
 const crypto = require("crypto");
 const Logger = require("../utils/logger");
 const TokenManager = require("./token-manager");
 const { SpotifyAuthError } = require("../utils/errors");
+
+dotenv.config();
 
 /**
  * Spotify OAuth authentication handler with persistent token management
@@ -14,6 +17,10 @@ class SpotifyAuth {
     this.clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
     this.redirectUri = process.env.SPOTIFY_REDIRECT_URI;
     this.port = process.env.OAUTH_PORT || 8888;
+
+    Logger.debug(
+      `SpotifyAuth initialized with: ${this.clientId}, ${this.redirectUri}`,
+    );
 
     if (!this.clientId || !this.clientSecret) {
       throw new SpotifyAuthError(

@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon src/index.js",
-    "dev:debug": "nodemon --inspect src/index.js",
+    "dev": "nodemon index.js",
+    "dev:debug": "nodemon --inspect index.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint src/"
@@ -27,7 +27,7 @@
     "cli-progress": "^3.12.0",
     "dotenv": "^17.2.1",
     "express": "^4.18.2",
-    "inquirer": "^12.9.3",
+    "inquirer": "^8.2.0",
     "open": "^10.2.0",
     "spotify-web-api-node": "^5.0.2",
     "string-similarity": "^4.0.4"

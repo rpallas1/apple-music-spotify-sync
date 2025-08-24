@@ -92,13 +92,13 @@ Build a local Node.js CLI tool that syncs Apple Music playlists to Spotify with 
 
 ### 3.1 Spotify Playlist Operations
 
-- [ ] **Task 3.1.1**: Playlist discovery
+- [x] **Task 3.1.1**: Playlist discovery
   - Search for existing playlists by name
   - Handle duplicate playlist names
-- [ ] **Task 3.1.2**: Playlist creation
+- [x] **Task 3.1.2**: Playlist creation
   - Create new playlists with metadata
   - Set playlist descriptions
-- [ ] **Task 3.1.3**: Track management
+- [x] **Task 3.1.3**: Track management
   - Add tracks to playlists
   - Handle duplicate tracks
   - Batch operations for efficiency

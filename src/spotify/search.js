@@ -144,4 +144,44 @@ class SpotifySearchService {
   }
 }
 
-module.exports = SpotifySearchService;
+/**
+ * Simple wrapper function for compatibility with index.js
+ * @param {SpotifyWebApi} spotifyApi - Authenticated Spotify API instance
+ * @param {Object} trackInfo - Track information
+ * @param {string} trackInfo.title - Song title
+ * @param {string} trackInfo.artist - Artist name
+ * @param {string} [trackInfo.album] - Album name (optional)
+ * @returns {Object|null} - Spotify track info with URI, or null if not found
+ */
+async function searchTrack(spotifyApi, { title, artist, album }) {
+  const searchService = new SpotifySearchService(spotifyApi);
+  
+  // Format the track data for the smart search
+  const song = {
+    title: title,
+    artist: artist,
+    album: album,
+    searchTitle: title,
+    searchArtist: artist
+  };
+  
+  const result = await searchService.searchTrackSmart(song);
+  
+  if (result && result.match && result.confidence > 0.5) {
+    return {
+      uri: result.match.uri,
+      id: result.match.id,
+      name: result.match.name,
+      artists: result.match.artists.map(a => a.name),
+      album: result.match.album.name,
+      confidence: result.confidence
+    };
+  }
+  
+  return null;
+}
+
+module.exports = {
+  SpotifySearchService,
+  searchTrack
+};

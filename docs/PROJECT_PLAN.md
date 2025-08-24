@@ -64,11 +64,11 @@ Build a local Node.js CLI tool that syncs Apple Music playlists to Spotify with 
 
 ### 2.1 Apple Music File Parser
 
-- [ ] **Task 2.1.1**: TSV file reader
+- [x] **Task 2.1.1**: TSV file reader
   - Handle different export formats
   - Parse columns (Name, Artist, Album, etc.)
   - Data validation and cleaning
-- [ ] **Task 2.1.2**: Song data normalization
+- [x] **Task 2.1.2**: Song data normalization
   - Clean up artist names (remove "feat.", "ft.", etc.)
   - Handle special characters
   - Normalize track titles

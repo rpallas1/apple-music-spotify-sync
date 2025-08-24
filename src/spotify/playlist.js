@@ -146,7 +146,57 @@ async function selectOrCreatePlaylistFlow(
   }
 }
 
+/**
+ * Get all tracks from a Spotify playlist
+ * @param {SpotifyWebApi} spotifyApi - Authenticated Spotify API instance
+ * @param {string} playlistId - Spotify playlist ID
+ * @returns {Array} Array of track objects with basic info
+ */
+async function getPlaylistTracks(spotifyApi, playlistId) {
+  const tracks = [];
+  let offset = 0;
+  const limit = 100; // Maximum allowed by Spotify API
+
+  try {
+    while (true) {
+      const response = await spotifyApi.getPlaylistTracks(playlistId, {
+        offset,
+        limit,
+        fields: 'items(track(uri,id,name,artists(name),album(name))),next'
+      });
+
+      const items = response.body.items;
+      
+      // Filter out null tracks (deleted songs)
+      const validTracks = items
+        .filter(item => item.track && item.track.uri)
+        .map(item => ({
+          uri: item.track.uri,
+          id: item.track.id,
+          name: item.track.name,
+          artists: item.track.artists.map(artist => artist.name),
+          album: item.track.album.name
+        }));
+
+      tracks.push(...validTracks);
+
+      // Check if there are more tracks to fetch
+      if (!response.body.next) {
+        break;
+      }
+      
+      offset += limit;
+    }
+
+    return tracks;
+  } catch (error) {
+    Logger.error(`Error fetching playlist tracks: ${error.message}`);
+    throw error;
+  }
+}
+
 module.exports = {
   createPlaylist,
   selectOrCreatePlaylistFlow,
+  getPlaylistTracks,
 };

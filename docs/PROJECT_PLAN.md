@@ -105,7 +105,7 @@ Build a local Node.js CLI tool that syncs Apple Music playlists to Spotify with 
 
 ### 3.2 Sync Logic Implementation
 
-- [ ] **Task 3.2.1**: Sync strategy
+- [x] **Task 3.2.1**: Sync strategy
   - Compare existing vs. new track lists
   - Handle additions, removals, reordering
   - Preserve manually added tracks option
